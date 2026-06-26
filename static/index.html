@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NL-to-SQL SQLite Web Explorer</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="app.js" defer></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <span class="logo-icon">📊</span>
+                    <h2>SQL Explorer</h2>
+                </div>
+            </div>
+
+            <div class="section-title">Databases</div>
+            <div class="db-section">
+                <select id="db-select" class="custom-select">
+                    <!-- Loaded dynamically -->
+                </select>
+                
+                <div class="upload-zone" id="upload-zone">
+                    <input type="file" id="db-file-input" accept=".db,.sqlite,.sqlite3" style="display: none;">
+                    <div class="upload-prompt" id="upload-trigger">
+                        <span>📤 Upload SQLite DB</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-title">Schema Browser</div>
+            <div class="schema-container" id="schema-browser">
+                <div class="empty-state">Select a database to browse its tables.</div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <header class="app-header">
+                <div class="header-title">
+                    <h1>NL-to-SQL SQL Analyst</h1>
+                    <span class="badge">Associate Level</span>
+                </div>
+                <div class="header-actions">
+                    <div class="api-key-container">
+                        <input type="password" id="api-key-input" placeholder="Paste Gemini API Key here..." class="key-input">
+                        <button id="save-key-btn" class="btn btn-secondary">Set Key</button>
+                    </div>
+                </div>
+            </header>
+
+            <div class="dashboard-grid">
+                <!-- Query Inputs -->
+                <div class="card query-card">
+                    <div class="card-header">
+                        <h3>Ask Your Database</h3>
+                        <span class="help-tooltip" title="Ask queries in plain English and we will generate the SQL">ℹ️</span>
+                    </div>
+                    <div class="card-body">
+                        <textarea id="prompt-input" placeholder="e.g. Find the top 3 customers who spent the most total money..."></textarea>
+                        
+                        <div class="suggestions-container">
+                            <span class="suggestions-label">Try asking:</span>
+                            <div class="chips" id="suggestions-chips">
+                                <!-- Chips loaded dynamically based on active DB -->
+                            </div>
+                        </div>
+
+                        <div class="action-bar">
+                            <button id="clear-btn" class="btn btn-text">Clear</button>
+                            <button id="execute-btn" class="btn btn-primary">
+                                <span class="btn-text-content">Generate & Execute</span>
+                                <span class="spinner" id="query-spinner" style="display: none;"></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Generated SQL & Explanation -->
+                <div class="card sql-card" id="sql-display-card" style="display: none;">
+                    <div class="card-header">
+                        <h3>Generated SQL Query</h3>
+                        <button class="btn-copy" id="copy-sql-btn" title="Copy to clipboard">📋 Copy</button>
+                    </div>
+                    <div class="card-body">
+                        <pre><code id="sql-code" class="language-sql"></code></pre>
+                        
+                        <div class="explanation-box">
+                            <h4>How it works</h4>
+                            <p id="sql-explanation"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Execution Results -->
+                <div class="card results-card" id="results-display-card" style="display: none;">
+                    <div class="card-header flex-header">
+                        <div class="tabs">
+                            <button class="tab-btn active" data-tab="table-tab">📋 Data Table</button>
+                            <button class="tab-btn" data-tab="chart-tab" id="chart-tab-btn">📈 Visualization</button>
+                        </div>
+                        <div class="query-meta">
+                            <span id="row-count">0 rows</span>
+                            <span class="separator">•</span>
+                            <span id="exec-time">0ms</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Table view -->
+                        <div id="table-tab" class="tab-content active">
+                            <div class="table-wrapper">
+                                <table id="results-table">
+                                    <thead>
+                                        <tr id="table-headers"></tr>
+                                    </thead>
+                                    <tbody id="table-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Chart view -->
+                        <div id="chart-tab" class="tab-content">
+                            <div class="chart-controls">
+                                <label for="chart-type">Chart Type:</label>
+                                <select id="chart-type" class="custom-select-small">
+                                    <option value="bar">Bar Chart</option>
+                                    <option value="line">Line Chart</option>
+                                    <option value="pie">Pie Chart</option>
+                                    <option value="doughnut">Doughnut Chart</option>
+                                </select>
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="results-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Error Panel -->
+                <div class="error-panel" id="error-panel" style="display: none;">
+                    <span class="error-icon">⚠️</span>
+                    <div class="error-details">
+                        <h4>Query Error</h4>
+                        <p id="error-message"></p>
+                    </div>
+                </div>
+
+                <!-- Manual SQL Editor -->
+                <div class="card manual-sql-card">
+                    <div class="card-header collapsible" id="manual-sql-header">
+                        <h3>💻 Manual SQL Editor (Advanced)</h3>
+                        <span class="arrow">▼</span>
+                    </div>
+                    <div class="card-body collapsible-content" id="manual-sql-content" style="display: none;">
+                        <textarea id="manual-sql-input" class="code-font" placeholder="SELECT * FROM customers LIMIT 5;"></textarea>
+                        <div class="action-bar-right">
+                            <button id="run-manual-btn" class="btn btn-accent">Run Custom Query</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
