@@ -66,15 +66,15 @@ Visit **[http://localhost:8000](http://localhost:8000)** in your web browser.
 
 ## Linking to Your GitHub Repository
 
-To link this local project to your GitHub account (`lakchchayam` / Divya):
+To link this local project to your GitHub account (Divkh456 / Divya):
 
-1. Go to [GitHub](https://github.com/) and create a new, empty repository named `sqlite-web-explorer` (do not initialize with README or gitignore).
+1. Go to [GitHub](https://github.com/) and create a new, empty repository named `SQL-2` (do not initialize with README or gitignore).
 2. Open your terminal in this directory and run the following commands:
    ```bash
    git add .
    git commit -m "Initial commit of NL-to-SQL SQLite Web Explorer"
    git branch -M main
-   git remote add origin https://github.com/lakchchayam/sqlite-web-explorer.git
+   git remote add origin https://github.com/Divkh456/SQL-2.git
    git push -u origin main
    ```
 
